@@ -47,10 +47,48 @@ def parse_args():
     return parser.parse_args()
 
 
+def clone_repository(repo):
+    return
+
+
+def is_repository():
+    return True
+
+
+def get_words(tags, params):
+    return []
+
+
+def get_top_words(words):
+    return []
+
+
+def create_report(words):
+    return []
+
+
+def output_report(report, output):
+    return
+
+
 def main():
+    tags = {
+        'verbs': 'VB',
+        'nouns': 'NN'
+    }
+
     args = parse_args()
-    print args
+    print(args)
+    clone_repository(args.repo)
+    if not is_repository():
+        exit(1)
+
+    words = get_words(tags[args.pos], args.where)
+    top_words = get_top_words(words)
+    report = create_report(top_words)
+    output_report(report, args.output)
 
 
 if __name__ == '__main__':
     main()
+
