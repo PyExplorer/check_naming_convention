@@ -1,7 +1,15 @@
 from argparse import ArgumentParser
 from git import Repo
 from git import exc
+from git.util import rmtree
 from os import path as os_path
+
+from utils import get_trees
+from utils import get_filenames_with_ext_in_path
+from utils import get_functions_from_trees
+from utils import get_vars_from_trees
+from utils import get_valid_names_from_nodes
+from utils import get_words_from_node_name
 
 
 def parse_args():
@@ -22,8 +30,8 @@ def parse_args():
     )
 
     parser_freq.add_argument(
-        '-w', '--where', choices=['func', 'var'], default='func',
-        help='Select place to search names - functions of local variables'
+        '-n', '--node', choices=['func', 'var'], default='func',
+        help='Select node to search names - functions of local variables'
     )
 
     parser.add_argument(
@@ -38,7 +46,7 @@ def parse_args():
 
     parser.add_argument(
         '-r', '--repo',
-        default='https://github.com/PyExplorer/check_naming_convention.git',
+        default='https://github.com/PyExplorer/habr_nouns.git',
         help='Select repo to clone'
     )
 
@@ -54,6 +62,7 @@ def parse_args():
 def clone_repository(repo):
     try:
         repo = Repo.clone_from(repo, os_path.join('.', 'repos'))
+
         return repo
     except exc.GitCommandError as e:
         print(
@@ -63,8 +72,16 @@ def clone_repository(repo):
     return
 
 
-def get_words(tags, params):
-    return []
+def get_words_in_path(path, tags, node_handler, ext):
+    filenames = get_filenames_with_ext_in_path(path, ext)
+    trees = get_trees(filenames)
+    node_names = node_handler(trees)
+    valid_node_names = get_valid_names_from_nodes(node_names)
+    words = []
+    for node_name in valid_node_names:
+        words_from_node = get_words_from_node_name(node_name, tags)
+        words.extend(words_from_node)
+    return words
 
 
 def get_top_words(words):
@@ -84,19 +101,34 @@ def main():
         'verbs': 'VB',
         'nouns': 'NN'
     }
+    plang = {
+        'python': 'py'
+    }
+    node_handler = {
+        'func': get_functions_from_trees,
+        'var': get_vars_from_trees
+    }
 
     args = parse_args()
-    print(args)
+
     repo = clone_repository(args.repo)
     if not repo:
         exit(1)
-    if not os_path.exists(repo.working_dir):
+    working_dir = repo.working_dir
+
+    if not os_path.exists(working_dir):
         exit(1)
 
-    words = get_words(tags[args.pos], args.where)
+    words = get_words_in_path(
+        working_dir,
+        tags[args.pos],
+        node_handler[args.node],
+        plang[args.plang]
+    )
     top_words = get_top_words(words)
     report = create_report(top_words)
     output_report(report, args.output)
+    rmtree(working_dir)
 
 
 if __name__ == '__main__':
