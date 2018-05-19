@@ -1,4 +1,7 @@
 from argparse import ArgumentParser
+from git import Repo
+from git import exc
+from os import path as os_path
 
 
 def parse_args():
@@ -34,7 +37,8 @@ def parse_args():
     )
 
     parser.add_argument(
-        '-r', '--repo', default='https://github.com/django/django.git',
+        '-r', '--repo',
+        default='https://github.com/PyExplorer/check_naming_convention.git',
         help='Select repo to clone'
     )
 
@@ -48,11 +52,15 @@ def parse_args():
 
 
 def clone_repository(repo):
+    try:
+        repo = Repo.clone_from(repo, os_path.join('.', 'repos'))
+        return repo
+    except exc.GitCommandError as e:
+        print(
+            'Something wrong happened, {} with status {}'.format(
+                e.stderr, e.status)
+        )
     return
-
-
-def is_repository():
-    return True
 
 
 def get_words(tags, params):
@@ -79,8 +87,10 @@ def main():
 
     args = parse_args()
     print(args)
-    clone_repository(args.repo)
-    if not is_repository():
+    repo = clone_repository(args.repo)
+    if not repo:
+        exit(1)
+    if not os_path.exists(repo.working_dir):
         exit(1)
 
     words = get_words(tags[args.pos], args.where)
@@ -91,4 +101,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
