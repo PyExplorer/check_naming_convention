@@ -2,6 +2,7 @@ import ast
 from os import walk as os_walk
 from os import path as os_path
 from nltk import pos_tag
+import collections
 
 
 def get_tree(filename):
@@ -92,3 +93,7 @@ def get_words_from_node_name(node_name, tags):
             continue
         words.append(word)
     return words
+
+
+def get_top_words(words, top_size=10):
+    return collections.Counter(words).most_common(top_size)
