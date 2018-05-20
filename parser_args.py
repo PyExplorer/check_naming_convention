@@ -35,13 +35,13 @@ def parse_args():
 
     parser.add_argument(
         '-r', '--repo',
-        default='https://github.com/PyExplorer/habr_nouns.git',
+        default='https://github.com/PyExplorer/check_naming_convention.git',
         help='Select repo to clone'
     )
 
     parser.add_argument(
         '-d', '--dir',
-        help='Select dict for analyze - we don\'t clone repo in this case',
+        help='local directory for storing repo',
         default='repos',
     )
 
@@ -62,4 +62,6 @@ def parse_args():
         help='clear repo after script finished',
         action='store_true'
     )
+    parser.add_argument('-l', '--log', type=str, dest='log', default='')
+
     return parser.parse_args()
