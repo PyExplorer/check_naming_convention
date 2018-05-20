@@ -1,9 +1,9 @@
-from argparse import ArgumentParser
 from os import path as os_path
 
 from git import Repo
 from git import exc
 from git.util import rmtree
+from parser_args import parse_args
 
 from formatter import format_csv, format_json, format_txt
 from utils import (
@@ -11,70 +11,6 @@ from utils import (
     get_top_words, get_trees, get_valid_names_from_nodes, get_vars_from_trees,
     get_words_from_node_name
 )
-
-
-def parse_args():
-    parser = ArgumentParser(
-        description='Clone repository and check naming convention '
-        'for multiple-word identifiers.'
-    )
-
-    subparsers = parser.add_subparsers(help='sub-command help')
-
-    parser_freq = subparsers.add_parser(
-        'freq',
-        help='Find frequency for part of speech'
-    )
-    parser_freq.add_argument(
-        '-p', '--pos', choices=['verbs', 'nouns'], default='verbs',
-        help='Select part of speech to analyze'
-    )
-
-    parser_freq.add_argument(
-        '-n', '--node', choices=['func', 'var'], default='func',
-        help='Select node to search names - functions of local variables'
-    )
-
-    parser.add_argument(
-        '-o', '--format', choices=['txt', 'json', 'csv'], default='txt',
-        help='Select format to output results'
-    )
-
-    parser.add_argument(
-        '-f', '--file', default='stdout',
-        help='Select file to output results'
-    )
-
-    parser.add_argument(
-        '-r', '--repo',
-        default='https://github.com/PyExplorer/habr_nouns.git',
-        help='Select repo to clone'
-    )
-
-    parser.add_argument(
-        '-d', '--dir',
-        help='Select dict for analyze - we don\'t clone repo in this case',
-        default='repos',
-    )
-
-    parser.add_argument(
-        '--plang', choices=['python'],
-        default='python',
-        help='programming language to parse'
-    )
-
-    parser.add_argument(
-        '--noclone',
-        help='no clone from repo - take only from dir (-d)',
-        action='store_true'
-    )
-
-    parser.add_argument(
-        '--clear',
-        help='clear repo after script finished',
-        action='store_true'
-    )
-    return parser.parse_args()
 
 
 def clone_repository(repo, dest_dir):
@@ -133,14 +69,13 @@ def main():
     }
 
     args = parse_args()
-    working_dir = ''
-    if not args.noclone:
+    if args.noclone:
+        working_dir = os_path.join('.', args.dir)
+    else:
         repo = clone_repository(args.repo, args.dir)
         if not repo:
             exit(1)
         working_dir = repo.working_dir
-    if args.noclone:
-        working_dir = os_path.join('.', args.dir)
 
     if not os_path.exists(working_dir):
         exit(1)
